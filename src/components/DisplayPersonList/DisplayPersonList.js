@@ -11,6 +11,7 @@ import {
   Button
 } from "grommet";
 import { dataURItoBuffer } from "../../utill";
+import PropTypes from "prop-types";
 
 export class DisplayPersonList extends Component {
   generateKey = pre => {
@@ -19,7 +20,6 @@ export class DisplayPersonList extends Component {
   // API call to add the current face image to a specific person
 
   addImage = async (imageSrc, personId) => {
-    console.log("Add button clicked");
     const subscriptionKey = process.env.REACT_APP_SUBSCRIPTION_KEY;
     const personGroupName = process.env.REACT_APP_PERSON_GROUP_NAME;
     const addImage_baseURL =
@@ -43,7 +43,6 @@ export class DisplayPersonList extends Component {
 
   // API call to delete a saved person by their person ID
   deletePerson = async personId => {
-    console.log("Add button clicked");
     const subscriptionKey = process.env.REACT_APP_SUBSCRIPTION_KEY;
     const personGroupName = process.env.REACT_APP_PERSON_GROUP_NAME;
     const deleteImage_baseURL =
@@ -81,7 +80,6 @@ export class DisplayPersonList extends Component {
         label: "Delete Image"
       }
     ];
-    console.log("Inside Display person list component", this.props.personList);
     return (
       <Table caption="Simple Table">
         <TableHeader>
@@ -142,4 +140,9 @@ export class DisplayPersonList extends Component {
   }
 }
 
+//proptypes
+DisplayPersonList.propTypes = {
+  image: PropTypes.string.isRequired,
+  personList: PropTypes.array.isRequired
+};
 export default DisplayPersonList;

@@ -1,21 +1,25 @@
-import React, { Component } from 'react'
+import React, { Component } from "react";
+import Webcam from "react-webcam";
+import { Button } from "grommet";
+import PropTypes from "prop-types";
 
 export class WebCamCapture extends Component {
-    setRef = webcam => {
-        this.webcam = webcam;
-      };
-    
-      capture = () => {
-        const imageSrc = this.webcam.getScreenshot();
-      };
-    render() {
-        const videoConstraints = {
-            width: 1280,
-            height: 720,
-            facingMode: "user"
-          };
-        return (
-            <div>
+  setRef = webcam => {
+    this.webcam = webcam;
+  };
+
+  capture = () => {
+    const imageSrc = this.webcam.getScreenshot();
+    this.props.webCamCapture(imageSrc);
+  };
+  render() {
+    const videoConstraints = {
+      width: 1280,
+      height: 720,
+      facingMode: "user"
+    };
+    return (
+      <>
         <Webcam
           audio={false}
           height={350}
@@ -24,10 +28,20 @@ export class WebCamCapture extends Component {
           width={350}
           videoConstraints={videoConstraints}
         />
-        <button onClick={this.capture}>Capture photo</button>
-      </div>
-        )
-    }
+        <Button
+          type="submit"
+          onClick={this.capture}
+          primary
+          label="Detect Face"
+        />
+      </>
+    );
+  }
 }
 
-export default WebCamCapture
+//proptypes
+WebCamCapture.propTypes = {
+  webCamCapture: PropTypes.func.isRequired
+};
+
+export default WebCamCapture;

@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { DataTable, Text } from "grommet";
+import PropTypes from "prop-types";
 
 export class DisplayFaceData extends Component {
   state = {
@@ -11,8 +12,6 @@ export class DisplayFaceData extends Component {
     hair: ""
   };
   render() {
-    const disData = this.props.showFaceData;
-    console.log("disData", disData);
     return (
       <DataTable
         columns={[
@@ -62,5 +61,10 @@ export class DisplayFaceData extends Component {
     );
   }
 }
+
+//proptypes
+DisplayFaceData.propTypes = {
+  showFaceData: PropTypes.array.isRequired
+};
 
 export default DisplayFaceData;
