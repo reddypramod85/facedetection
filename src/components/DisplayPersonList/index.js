@@ -19,9 +19,11 @@ export class DisplayPersonList extends Component {
   };
   // API call to add the current face image to a specific person
 
+  // Consider refactoring to your utils.
   addImage = async (imageSrc, personId) => {
     const subscriptionKey = process.env.REACT_APP_SUBSCRIPTION_KEY;
     const personGroupName = process.env.REACT_APP_PERSON_GROUP_NAME;
+    // use util base API variable + template strings.
     const addImage_baseURL =
       "https://azure-faceapi.cognitiveservices.azure.com/face/v1.0/persongroups/" +
       personGroupName +
@@ -64,7 +66,7 @@ export class DisplayPersonList extends Component {
   //getPersonList();
 
   render() {
-    const COLUMNS = [
+    const columns = [
       {
         property: "name",
         label: "Name",
@@ -84,7 +86,7 @@ export class DisplayPersonList extends Component {
       <Table caption="Simple Table">
         <TableHeader>
           <TableRow>
-            {COLUMNS.map(c => (
+            {columns.map(c => (
               <TableCell
                 key={uuidv1()}
                 scope="col"
@@ -97,8 +99,8 @@ export class DisplayPersonList extends Component {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {this.props.personList.map(datum => (
-            <TableRow key={uuidv1()}>
+          {this.props.personList.map((datum, index) => (
+            <TableRow key={`${datum.personId}-${index}`}>
               <>
                 <TableCell>
                   <Text>{datum.name}</Text>
@@ -128,8 +130,9 @@ export class DisplayPersonList extends Component {
         </TableBody>
         <TableFooter>
           <TableRow>
-            {COLUMNS.map(c => (
+            {columns.map(c => (
               <TableCell key={uuidv1()} border="top" align={c.align}>
+                { /* investigate, try to remove uuid library. */}
                 <Text>{c.footer}</Text>
               </TableCell>
             ))}
