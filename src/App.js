@@ -1,9 +1,8 @@
 import React from "react";
 import { Grommet, Box, Form } from "grommet";
 import { grommet } from "grommet/themes";
-import WebCamCapture from "./components/WebCamCapture/WebCamCapture";
-import Header from "./components/Layout/Header";
-import DisplayFaceData from "./components/DisplayFaceData/DisplayFaceData";
+// Clean up imports to be less redundant
+// import WebCamCapture from "./components/WebCamCapture";
 import {
   fetchFaceEntries,
   getPersonList,
@@ -12,8 +11,15 @@ import {
   fetchfaceIds,
   identifyFaceResponse
 } from "./utill";
-import Canvas from "./components/Canvas/Canvas";
-import DisplayPersonList from "./components/DisplayPersonList/DisplayPersonList";
+
+// Consider named imports pattern like below
+import {
+  Canvas, DisplayFaceData, DisplayPersonList,
+  Header, WebCamCapture,
+} from './components';
+
+// import * as Components from './components';
+// <Components.Canvas />
 
 class App extends React.Component {
   state = {
@@ -26,7 +32,8 @@ class App extends React.Component {
     personList: [],
     faceEntries: [],
     candidatePersons: [],
-    faceIdsArray: []
+    faceIdsArray: [],
+    // error: null
   };
 
   captureImage = img => {
@@ -39,9 +46,11 @@ class App extends React.Component {
 
     // API call to get the list of all persons in the current person group
     try {
-      const persnlist = await getPersonList();
-      this.setState({ personList: persnlist });
+      const personList = await getPersonList();
+      // Use shorthand syntax
+      this.setState({ personList });
     } catch (error) {
+      // App should display when there's an error. Maybe setError(error) 
       console.log(error);
     }
 
@@ -52,14 +61,16 @@ class App extends React.Component {
       const getFaceEntriesList = await getFaceEntries.json();
       this.setState({ faceEntries: getFaceEntriesList });
     } catch (error) {
+      // App should display when there's an error. Maybe setError(error)
       console.log(error);
     }
-    
+
     // retrieve face ids from the identified faces
     try {
       const getFaceIds = await fetchfaceIds(this.state.faceEntries);
       this.setState({ faceIdsArray: getFaceIds });
     } catch (error) {
+      // App should display when there's an error. Maybe setError(error)
       console.log(error);
     }
 
@@ -70,7 +81,7 @@ class App extends React.Component {
         this.state.faceIdsArray
       );
       const candidatePersons = await getIdentifyFaceResponse.json();
-      this.setState({ candidatePersons: candidatePersons });
+      this.setState({ candidatePersons });
     } catch (error) {
       console.log(error);
     }
@@ -132,7 +143,7 @@ class App extends React.Component {
                 </>
               ) : null}
             </Box>
-            {this.state.imageData ? (
+            {this.state.imageData && (
               <Box
                 direction="row-responsive"
                 justify="center"
@@ -142,15 +153,15 @@ class App extends React.Component {
               >
                 <DisplayFaceData showFaceData={this.state.faceData} />
               </Box>
-            ) : null}
-            {this.state.personList.length > 0 ? (
+            )}
+            {this.state.personList.length > 0 && (
               <Box pad="medium" align="center" gap="small">
                 <DisplayPersonList
                   image={this.state.imageData}
                   personList={this.state.personList}
                 />
               </Box>
-            ) : null}
+            )}
           </Form>
         </Box>
       </Grommet>

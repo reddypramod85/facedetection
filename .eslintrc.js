@@ -6,7 +6,17 @@ module.exports = {
   extends: "eslint:recommended",
   globals: {
     Atomics: "readonly",
-    SharedArrayBuffer: "readonly"
+    SharedArrayBuffer: "readonly",
+    it: true,
+    expect: true,
+    describe: true,
+    jest: true,
+    document: true,
+    test: true,
+    window: true,
+    fetch: true,
+    WebSocket: true,
+    alert: true
   },
   parserOptions: {
     ecmaFeatures: {

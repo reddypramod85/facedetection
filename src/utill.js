@@ -3,27 +3,42 @@ const subscriptionKey = process.env.REACT_APP_SUBSCRIPTION_KEY;
 // A person group is a container holding the uploaded person data, including face recognition features
 const personGroupName = process.env.REACT_APP_PERSON_GROUP_NAME;
 // URI for face detect
-/*     const params_Detect = {
-      returnFaceId: "true",
-      returnFaceLandmarks: "false",
-      returnFaceAttributes:
-        "age,gender,headPose,smile,facialHair,glasses," +
-        "emotion,hair,makeup,occlusion,accessories,blur,exposure,noise"
-    }; */
+/*
+// Encode object to url params string
+const serialize = (obj) => {
+  var str = [];
+  for (var p in obj)
+    if (obj.hasOwnProperty(p)) {
+      str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+    }
+  return str.join("&");
+}; 
+
+const paramsDetect = {
+  returnFaceId: "true",
+  returnFaceLandmarks: "false",
+  returnFaceAttributes:
+    "age,gender,headPose,smile,facialHair,glasses," +
+    "emotion,hair,makeup,occlusion,accessories,blur,exposure,noise"
+};
+
+serialize(paramsDetect);
+*/
+
+const apiUrl = 'https://azure-faceapi.cognitiveservices.azure.com/face/v1.0';
 
 // URI for face Detection
 const uri_Detect =
-  "https://azure-faceapi.cognitiveservices.azure.com/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile,facialHair,glasses,emotion,hair";
+  `${apiUrl}/detect?returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile,facialHair,glasses,emotion,hair`;
 // URI for face Identify
 const uri_Identify =
-  "https://azure-faceapi.cognitiveservices.azure.com/face/v1.0/identify?";
+  `${apiUrl}/identify?`;
 
 // URI for list of persons in a person group
 const uri_getPersons =
-  "https://azure-faceapi.cognitiveservices.azure.com/face/v1.0/persongroups/" +
-  personGroupName +
-  "/persons?";
+  `${apiUrl}/persongroups/${personGroupName}/persons?`;
 
+// Base 64ing image to transmit.
 const dataURItoBuffer = async dataURL => {
   const buff = await new Buffer(
     dataURL.replace(/^data:image\/(png|gif|jpeg);base64,/, ""),
@@ -107,12 +122,14 @@ const getNameFromId = (personId, personList) => {
   return personName;
 };
 
+// Do we need async function here?
 async function fetchfaceIds(body) {
   let faceIds = body.map(person => person.faceId);
   return faceIds;
 }
 
 // Get the face location rectangle coordinate/size information
+// Do we need async function here?
 async function faceRects(data) {
   let faceRectsArray = [];
   data.map((faceEntry, index) => {
@@ -130,6 +147,7 @@ async function faceRects(data) {
 }
 
 // Save and display the face data
+// Do we need async function here?
 async function displayData(candidatePersons, personList, faceEntries) {
   let name;
   let confidence;
@@ -154,33 +172,36 @@ async function displayData(candidatePersons, personList, faceEntries) {
     let glasses = faceAttributes.glasses;
     let emotions = "";
     // Return the most confident emotion
-    emotions = Object.keys(faceAttributes.emotion).reduce(function(a, b) {
-      return faceAttributes.emotion[a] > faceAttributes.emotion[b] ? a : b;
-    });
-    if (emotions === "") {
-      emotions = "unclear";
-    }
-    let hair = "";
-    // Return the most confident hair color
-    if (faceAttributes.hair.invisible) hair = "unclear";
-    else if (faceAttributes.hair.bald > 0.7) hair = "bald";
-    // Microsoft returns the hair color in an array in order of confidence
-    else {
-      hair = faceAttributes.hair.hairColor[0].color;
-    }
-    faceDataArray.push({
-      name: name,
-      confidence: confidence,
-      gender: gender,
-      age: age,
-      smile: smile,
-      emotions: emotions,
-      hair: hair,
-      glasses: glasses
-    });
-    return null;
+    // Arrow function to clean up return
+    emotions = Object.keys(faceAttributes.emotion).reduce((a, b) =>
+      faceAttributes.emotion[a] > faceAttributes.emotion[b]
+        ? a
+        : b;
+    );
+  if (emotions === "") {
+    emotions = "unclear";
+  }
+  let hair = "";
+  // Return the most confident hair color
+  if (faceAttributes.hair.invisible) hair = "unclear";
+  else if (faceAttributes.hair.bald > 0.7) hair = "bald";
+  // Microsoft returns the hair color in an array in order of confidence
+  else {
+    hair = faceAttributes.hair.hairColor[0].color;
+  }
+  faceDataArray.push({
+    name: name,
+    confidence: confidence,
+    gender: gender,
+    age: age,
+    smile: smile,
+    emotions: emotions,
+    hair: hair,
+    glasses: glasses
   });
-  return faceDataArray;
+  return null;
+});
+return faceDataArray;
 }
 
 async function identifyFaceResponse(faceIdsArray) {
