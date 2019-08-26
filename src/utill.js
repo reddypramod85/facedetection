@@ -9,18 +9,13 @@ const subscriptionKey = process.env.REACT_APP_SUBSCRIPTION_KEY;
 // A person group is a container holding the uploaded person data, including face recognition features
 const personGroupName = process.env.REACT_APP_PERSON_GROUP_NAME;
 
-// URI for face detect
-/*     const params_Detect = {
-      returnFaceId: "true",
-      returnFaceLandmarks: "false",
-      returnFaceAttributes:
-        "age,gender,headPose,smile,facialHair,glasses," +
-        "emotion,hair,makeup,occlusion,accessories,blur,exposure,noise"
-    }; */
+// adding face detect attributes
 const addImageParams =
   'returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile,facialHair,glasses,emotion,hair';
+
 // URI for face Detection
 const detectUri = `${baseUrl}/detect?${addImageParams}`;
+
 // URI for face Identify
 const identifyUril =
   'https://azure-faceapi.cognitiveservices.azure.com/face/v1.0/identify?';
@@ -47,23 +42,12 @@ async function getPersonList() {
       'Ocp-Apim-Subscription-Key': subscriptionKey,
     },
   }).catch(err => {
-    alert(err);
     console.log('err', err);
   });
   const pList = await personList.json();
   const prsnList = await savePersonList(pList);
   return prsnList;
 }
-
-/* // convert image to base64 encoded
-decoded = dataUriToBuffer(dataURL);
-const dataURItoBuffer = async dataURL => {
-  const buff = await dataURItoBuffer.from(
-    dataURL.replace(/^data:image\/(png|gif|jpeg);base64,/, ''),
-    'base64',
-  );
-  return buff;
-}; */
 
 // API call to Detect human faces in an image, return face rectangles, and optionally with faceIds,
 // landmarks, and attributes
@@ -77,7 +61,6 @@ async function fetchFaceEntries(imageData) {
       'Ocp-Apim-Subscription-Key': subscriptionKey,
     },
   }).catch(err => {
-    alert(err);
     console.log('err', err);
   });
   return faceDetect;
@@ -104,7 +87,6 @@ async function identifyFaceFromGroup(faceIdsArray, personGroupId) {
     },
     credentials: 'same-origin',
   }).catch(err => {
-    alert(err);
     console.log('err', err);
   });
   return res;
@@ -115,7 +97,6 @@ async function identifyFaceResponse(faceIdsArray) {
     faceIdsArray,
     personGroupName,
   ).catch(err => {
-    alert(err);
     console.log('err', err);
   });
   return identifyFaceRes;
