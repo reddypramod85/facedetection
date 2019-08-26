@@ -4,8 +4,8 @@ import PropTypes from 'prop-types';
 class Canvas extends React.Component {
   componentDidMount() {
     const ctx = this.canvas.getContext('2d');
-    this.image.onload = () => {
-      ctx.drawImage(this.image, 0, 0);
+    this.imag.onload = () => {
+      ctx.drawImage(this.imag, 0, 0);
       ctx.strokeStyle = '#ffbb00';
       ctx.lineWidth = 2;
       let count = 0;
@@ -35,7 +35,7 @@ class Canvas extends React.Component {
         />
         <img
           ref={img => {
-            this.image = img;
+            this.imag = img;
           }}
           alt=""
           src={this.props.image}

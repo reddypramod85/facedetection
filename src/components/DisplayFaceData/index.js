@@ -38,7 +38,7 @@ export class DisplayFaceData extends Component {
             primary: true,
           },
           {
-            property: 'emotions',
+            property: 'emotion',
             header: <Text>Emotions</Text>,
             primary: true,
           },

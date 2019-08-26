@@ -129,6 +129,31 @@ const getNameFromId = (personId, personList) => {
   return personName;
 };
 
+// return facial emotions
+function emotions(faceAttributes) {
+  let faceEmotions = '';
+  // Return the most confident emotion
+  faceEmotions = Object.keys(faceAttributes.emotion).reduce((a, b) => {
+    return faceAttributes.emotion[a] > faceAttributes.emotion[b] ? a : b;
+  });
+  if (faceEmotions === '') {
+    faceEmotions = 'unclear';
+  }
+  return faceEmotions;
+}
+
+// return person hair color
+function hair(faceAttributes) {
+  let personHair = '';
+  // Return the most confident hair color
+  if (faceAttributes.hair.invisible) personHair = 'unclear';
+  else if (faceAttributes.hair.bald > 0.7) personHair = 'bald';
+  // Microsoft returns the hair color in an array in order of confidence
+  else {
+    personHair = faceAttributes.hair.hairColor[0].color;
+  }
+  return personHair;
+}
 // Save and display the face data
 function displayData(candidatePersons, personList, faceEntries) {
   let name;
@@ -153,30 +178,18 @@ function displayData(candidatePersons, personList, faceEntries) {
     const { age } = faceAttributes;
     const smile = (parseFloat(faceAttributes.smile) * 100).toFixed(1);
     const { glasses } = faceAttributes;
-    let emotions = '';
-    // Return the most confident emotion
-    emotions = Object.keys(faceAttributes.emotion).reduce((a, b) => {
-      return faceAttributes.emotion[a] > faceAttributes.emotion[b] ? a : b;
-    });
-    if (emotions === '') {
-      emotions = 'unclear';
-    }
-    let hair = '';
-    // Return the most confident hair color
-    if (faceAttributes.hair.invisible) hair = 'unclear';
-    else if (faceAttributes.hair.bald > 0.7) hair = 'bald';
-    // Microsoft returns the hair color in an array in order of confidence
-    else {
-      hair = faceAttributes.hair.hairColor[0].color;
-    }
+
+    const emotion = emotions(faceAttributes);
+    const hairs = hair(faceAttributes);
+
     faceDataArray.push({
       name,
       confidence,
       gender,
       age,
       smile,
-      emotions,
-      hair,
+      emotion,
+      hairs,
       glasses,
     });
     return null;
