@@ -1,60 +1,52 @@
-import React, { Component } from "react";
-import { DataTable, Text } from "grommet";
-import PropTypes from "prop-types";
+import React, { Component } from 'react';
+import { DataTable, Text } from 'grommet';
+import PropTypes from 'prop-types';
 
 export class DisplayFaceData extends Component {
-  state = {
-    name: "",
-    confidence: "",
-    gender: "",
-    age: "",
-    smile: "",
-    hair: ""
-  };
   render() {
     return (
       <DataTable
         columns={[
           {
-            property: "name",
+            property: 'name',
             header: <Text>Name</Text>,
-            primary: true
+            primary: true,
           },
           {
-            property: "confidence",
+            property: 'confidence',
             header: <Text>Confidence</Text>,
-            primary: true
+            primary: true,
           },
           {
-            property: "gender",
+            property: 'gender',
             header: <Text>Gender</Text>,
-            primary: true
+            primary: true,
           },
           {
-            property: "age",
+            property: 'age',
             header: <Text>Age</Text>,
-            primary: true
+            primary: true,
           },
           {
-            property: "hair",
+            property: 'hair',
             header: <Text>Hair</Text>,
-            primary: true
+            primary: true,
           },
           {
-            property: "glasses",
+            property: 'glasses',
             header: <Text>Glasses</Text>,
-            primary: true
+            primary: true,
           },
           {
-            property: "emotions",
+            property: 'emotions',
             header: <Text>Emotions</Text>,
-            primary: true
+            primary: true,
           },
           {
-            property: "smile",
+            property: 'smile',
             header: <Text>Smile</Text>,
-            primary: true
-          }
+            primary: true,
+          },
         ]}
         data={this.props.showFaceData}
       />
@@ -62,9 +54,9 @@ export class DisplayFaceData extends Component {
   }
 }
 
-//proptypes
+// proptypes
 DisplayFaceData.propTypes = {
-  showFaceData: PropTypes.array.isRequired
+  showFaceData: PropTypes.array.isRequired,
 };
 
 export default DisplayFaceData;

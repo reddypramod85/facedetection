@@ -12,6 +12,7 @@ export class WebCamCapture extends Component {
     const imageSrc = this.webcam.getScreenshot();
     this.props.webCamCapture(imageSrc);
   };
+
   render() {
     const videoConstraints = {
       width: 1280,
@@ -39,7 +40,7 @@ export class WebCamCapture extends Component {
   }
 }
 
-//proptypes
+// proptypes
 WebCamCapture.propTypes = {
   webCamCapture: PropTypes.func.isRequired
 };

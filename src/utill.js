@@ -1,7 +1,14 @@
+import dataUriToBuffer from 'data-uri-to-buffer';
+
+// base URL for Azure Face API
+const baseUrl = 'https://azure-faceapi.cognitiveservices.azure.com/face/v1.0';
+
 // Azure face api subscription key
 const subscriptionKey = process.env.REACT_APP_SUBSCRIPTION_KEY;
+
 // A person group is a container holding the uploaded person data, including face recognition features
 const personGroupName = process.env.REACT_APP_PERSON_GROUP_NAME;
+
 // URI for face detect
 /*     const params_Detect = {
       returnFaceId: "true",
@@ -10,192 +17,220 @@ const personGroupName = process.env.REACT_APP_PERSON_GROUP_NAME;
         "age,gender,headPose,smile,facialHair,glasses," +
         "emotion,hair,makeup,occlusion,accessories,blur,exposure,noise"
     }; */
-
+const addImageParams =
+  'returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile,facialHair,glasses,emotion,hair';
 // URI for face Detection
-const uri_Detect =
-  "https://azure-faceapi.cognitiveservices.azure.com/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile,facialHair,glasses,emotion,hair";
+const detectUri = `${baseUrl}/detect?${addImageParams}`;
 // URI for face Identify
-const uri_Identify =
-  "https://azure-faceapi.cognitiveservices.azure.com/face/v1.0/identify?";
+const identifyUril =
+  'https://azure-faceapi.cognitiveservices.azure.com/face/v1.0/identify?';
 
 // URI for list of persons in a person group
-const uri_getPersons =
-  "https://azure-faceapi.cognitiveservices.azure.com/face/v1.0/persongroups/" +
-  personGroupName +
-  "/persons?";
-
-const dataURItoBuffer = async dataURL => {
-  const buff = await new Buffer(
-    dataURL.replace(/^data:image\/(png|gif|jpeg);base64,/, ""),
-    "base64"
-  );
-  return buff;
-};
-
-// Call this after detecting faces, with face IDs,
-// to identify the faces from the people group
-async function identifyFaceFromGroup(faceIdsArray, personGroupName) {
-  const res = await fetch(uri_Identify, {
-    method: "POST",
-    body: JSON.stringify({
-      faceIds: faceIdsArray,
-      personGroupId: personGroupName
-    }),
-    headers: {
-      "Content-Type": "application/json",
-      "Ocp-Apim-Subscription-Key": subscriptionKey
-    },
-    credentials: "same-origin"
-  }).catch(err => {
-    alert(err);
-    console.log("err", err);
-  });
-  return res;
-}
-
-// API call to Detect human faces in an image, return face rectangles, and optionally with faceIds,
-// landmarks, and attributes
-async function fetchFaceEntries(imageData) {
-  const buff = await dataURItoBuffer(imageData);
-  const faceDetect = await fetch(uri_Detect, {
-    method: "POST",
-    body: buff,
-    headers: {
-      "Content-Type": "application/octet-stream",
-      "Ocp-Apim-Subscription-Key": subscriptionKey
-    }
-  }).catch(err => {
-    alert(err);
-    console.log("err", err);
-  });
-  return faceDetect;
-}
+const getPersonsUri = `${baseUrl}/persongroups/${personGroupName}/persons?`;
 
 // CLear, create and save the person list
 function savePersonList(data) {
   const personList = [];
-  for (var i = 0; i < data.length; i++) {
+  /* for (let i = 0; i < data.length; i++) {
     personList.push({ name: data[i].name, personId: data[i].personId });
-  }
+  } */
+  data.map(d => personList.push({ name: d.name, personId: d.personId }));
   return personList;
 }
 
 // API call to get the list of all persons in the current person group
 async function getPersonList() {
-  const personList = await fetch(uri_getPersons, {
-    method: "GET",
+  const personList = await fetch(getPersonsUri, {
+    method: 'GET',
     headers: {
-      "Content-Type": "application/json",
-      "Ocp-Apim-Subscription-Key": subscriptionKey
-    }
+      'Content-Type': 'application/json',
+      'Ocp-Apim-Subscription-Key': subscriptionKey,
+    },
   }).catch(err => {
     alert(err);
-    console.log("err", err);
+    console.log('err', err);
   });
   const pList = await personList.json();
   const prsnList = await savePersonList(pList);
   return prsnList;
 }
 
-//function to get person name from the person ID
+/* // convert image to base64 encoded
+decoded = dataUriToBuffer(dataURL);
+const dataURItoBuffer = async dataURL => {
+  const buff = await dataURItoBuffer.from(
+    dataURL.replace(/^data:image\/(png|gif|jpeg);base64,/, ''),
+    'base64',
+  );
+  return buff;
+}; */
+
+// API call to Detect human faces in an image, return face rectangles, and optionally with faceIds,
+// landmarks, and attributes
+async function fetchFaceEntries(imageData) {
+  const buff = await dataUriToBuffer(imageData);
+  const faceDetect = await fetch(detectUri, {
+    method: 'POST',
+    body: buff,
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Ocp-Apim-Subscription-Key': subscriptionKey,
+    },
+  }).catch(err => {
+    alert(err);
+    console.log('err', err);
+  });
+  return faceDetect;
+}
+
+// create faceId array from the list of detected persons
+function fetchfaceIds(body) {
+  const faceIds = body.map(person => person.faceId);
+  return faceIds;
+}
+
+// Call this after detecting faces, with face IDs,
+// to identify the faces from the people group
+async function identifyFaceFromGroup(faceIdsArray, personGroupId) {
+  const res = await fetch(identifyUril, {
+    method: 'POST',
+    body: JSON.stringify({
+      faceIds: faceIdsArray,
+      personGroupId,
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+      'Ocp-Apim-Subscription-Key': subscriptionKey,
+    },
+    credentials: 'same-origin',
+  }).catch(err => {
+    alert(err);
+    console.log('err', err);
+  });
+  return res;
+}
+
+async function identifyFaceResponse(faceIdsArray) {
+  const identifyFaceRes = await identifyFaceFromGroup(
+    faceIdsArray,
+    personGroupName,
+  ).catch(err => {
+    alert(err);
+    console.log('err', err);
+  });
+  return identifyFaceRes;
+}
+
+// Get the face location rectangle coordinate/size information
+function faceRects(data) {
+  const faceRectsArray = [];
+  data.map(faceEntry => {
+    const faceRect = faceEntry.faceRectangle;
+    faceRectsArray.push({
+      left: faceRect.left,
+      top: faceRect.top,
+      width: faceRect.width,
+      height: faceRect.height,
+    });
+    // this.setState({ faceRects: faceRectsArray });
+    return null;
+  });
+  return faceRectsArray;
+}
+
+// function to get person name from the person ID
 const getNameFromId = (personId, personList) => {
   let personName;
-  personList.map((person, index) => {
+  personList.map(person => {
     if (person.personId === personId) personName = personList[0].name;
     return null;
   });
   return personName;
 };
 
-async function fetchfaceIds(body) {
-  let faceIds = body.map(person => person.faceId);
-  return faceIds;
-}
-
-// Get the face location rectangle coordinate/size information
-async function faceRects(data) {
-  let faceRectsArray = [];
-  data.map((faceEntry, index) => {
-    const faceRect = faceEntry.faceRectangle;
-    faceRectsArray.push({
-      left: faceRect.left,
-      top: faceRect.top,
-      width: faceRect.width,
-      height: faceRect.height
-    });
-    //this.setState({ faceRects: faceRectsArray });
-    return null;
-  });
-  return faceRectsArray;
-}
-
 // Save and display the face data
-async function displayData(candidatePersons, personList, faceEntries) {
+function displayData(candidatePersons, personList, faceEntries) {
   let name;
   let confidence;
-  let faceDataArray = [];
+  const faceDataArray = [];
   faceEntries.map((faceEntry, index) => {
     if (candidatePersons[index].candidates[0] != null) {
       name = getNameFromId(
         candidatePersons[index].candidates[0].personId,
-        personList
+        personList,
       );
       confidence = parseInt(
-        candidatePersons[index].candidates[0].confidence * 100
+        candidatePersons[index].candidates[0].confidence * 100,
+        10,
       );
     } else {
-      name = "unknown";
-      confidence = "N/A";
+      name = 'unknown';
+      confidence = 'N/A';
     }
-    let faceAttributes = faceEntry.faceAttributes;
-    let gender = faceAttributes.gender.toString();
-    let age = faceAttributes.age;
-    let smile = (parseFloat(faceAttributes.smile) * 100).toFixed(1);
-    let glasses = faceAttributes.glasses;
-    let emotions = "";
+    const { faceAttributes } = faceEntry;
+    const gender = faceAttributes.gender.toString();
+    const { age } = faceAttributes;
+    const smile = (parseFloat(faceAttributes.smile) * 100).toFixed(1);
+    const { glasses } = faceAttributes;
+    let emotions = '';
     // Return the most confident emotion
-    emotions = Object.keys(faceAttributes.emotion).reduce(function(a, b) {
+    emotions = Object.keys(faceAttributes.emotion).reduce((a, b) => {
       return faceAttributes.emotion[a] > faceAttributes.emotion[b] ? a : b;
     });
-    if (emotions === "") {
-      emotions = "unclear";
+    if (emotions === '') {
+      emotions = 'unclear';
     }
-    let hair = "";
+    let hair = '';
     // Return the most confident hair color
-    if (faceAttributes.hair.invisible) hair = "unclear";
-    else if (faceAttributes.hair.bald > 0.7) hair = "bald";
+    if (faceAttributes.hair.invisible) hair = 'unclear';
+    else if (faceAttributes.hair.bald > 0.7) hair = 'bald';
     // Microsoft returns the hair color in an array in order of confidence
     else {
       hair = faceAttributes.hair.hairColor[0].color;
     }
     faceDataArray.push({
-      name: name,
-      confidence: confidence,
-      gender: gender,
-      age: age,
-      smile: smile,
-      emotions: emotions,
-      hair: hair,
-      glasses: glasses
+      name,
+      confidence,
+      gender,
+      age,
+      smile,
+      emotions,
+      hair,
+      glasses,
     });
     return null;
   });
   return faceDataArray;
 }
 
-async function identifyFaceResponse(faceIdsArray) {
-  const identifyFaceRes = await identifyFaceFromGroup(
-    faceIdsArray,
-    personGroupName
-  ).catch(err => {
-    alert(err);
-    console.log("err", err);
+// API call to add the current face image to a specific person
+async function addImage(imageSrc, personId) {
+  const addImageUrl = `${baseUrl}/persongroups/${personGroupName}/persons/${personId}/persistedFaces?`;
+  const buff = await dataUriToBuffer(imageSrc);
+  await fetch(`${addImageUrl}${addImageParams}`, {
+    method: 'POST',
+    body: buff,
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Ocp-Apim-Subscription-Key': subscriptionKey,
+    },
+    credentials: 'same-origin',
   });
-  return identifyFaceRes;
+}
+
+// API call to delete a saved person by their person ID
+async function deletePerson(personId) {
+  const deleteImage = `${baseUrl}/persongroups/${personGroupName}/persons/${personId}?`;
+  await fetch(deleteImage, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Ocp-Apim-Subscription-Key': subscriptionKey,
+    },
+  });
 }
 
 export {
-  dataURItoBuffer,
   identifyFaceFromGroup,
   fetchFaceEntries,
   getPersonList,
@@ -203,5 +238,7 @@ export {
   faceRects,
   displayData,
   identifyFaceResponse,
-  fetchfaceIds
+  fetchfaceIds,
+  addImage,
+  deletePerson,
 };
