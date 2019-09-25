@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 class Canvas extends React.Component {
+  // draw the canvas image with face rectangles
   componentDidMount() {
     const ctx = this.canvas.getContext('2d');
     this.imag.onload = () => {
