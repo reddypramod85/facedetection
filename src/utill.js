@@ -224,6 +224,16 @@ async function deletePerson(personId) {
   });
 }
 
+//  create a base64 encoded ASCII string from a string of binary data
+function arrayBufferToBase64(buffer) {
+  let binary = '';
+  const bytes = [].slice.call(new Uint8Array(buffer));
+
+  bytes.forEach(b => (binary += String.fromCharCode(b)));
+
+  return window.btoa(binary);
+}
+
 export {
   identifyFaceFromGroup,
   fetchFaceEntries,
@@ -235,4 +245,5 @@ export {
   fetchfaceIds,
   addImage,
   deletePerson,
+  arrayBufferToBase64,
 };

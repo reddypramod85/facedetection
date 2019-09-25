@@ -1,33 +1,44 @@
-import React, { Component } from "react";
-import Webcam from "react-webcam";
-import { Button } from "grommet";
-import PropTypes from "prop-types";
+import React, { Component } from 'react';
+import { Button, Image } from 'grommet';
+import PropTypes from 'prop-types';
+import { arrayBufferToBase64 } from '../../utill';
 
 export class WebCamCapture extends Component {
-  setRef = webcam => {
-    this.webcam = webcam;
+  state = {
+    image: null,
   };
 
+  componentDidMount() {
+    // fetch the image from camera to do facial detection
+    fetch('http://localhost:5000/images/output.png', {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    }).then(response => {
+      response.arrayBuffer().then(buffer => {
+        const base64Flag = 'data:image/jpeg;base64,';
+
+        const imageStr = arrayBufferToBase64(buffer);
+        const image = base64Flag + imageStr;
+        this.setState({ image });
+      });
+    });
+  }
+
   capture = () => {
-    const imageSrc = this.webcam.getScreenshot();
+    const imageSrc = this.state.image;
     this.props.webCamCapture(imageSrc);
   };
 
   render() {
-    const videoConstraints = {
-      width: 1280,
-      height: 720,
-      facingMode: "user"
-    };
     return (
       <>
-        <Webcam
-          audio={false}
-          height={350}
-          ref={this.setRef}
-          screenshotFormat="image/jpeg"
-          width={350}
-          videoConstraints={videoConstraints}
+        <Image
+          height="200"
+          width="300"
+          src="http://localhost:5000/images/output.png"
         />
         <Button
           type="submit"
@@ -42,7 +53,7 @@ export class WebCamCapture extends Component {
 
 // proptypes
 WebCamCapture.propTypes = {
-  webCamCapture: PropTypes.func.isRequired
+  webCamCapture: PropTypes.func.isRequired,
 };
 
 export default WebCamCapture;
