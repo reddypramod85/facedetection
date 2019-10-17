@@ -1,45 +1,43 @@
 import React, { Component } from 'react';
 import { Button, Image } from 'grommet';
 import PropTypes from 'prop-types';
-import { arrayBufferToBase64 } from '../../utill';
+import { arrayBufferToBase64, resizeImage } from '../../utill';
 
 export class WebCamCapture extends Component {
   state = {
-    image: null,
+    resizedImage: null,
   };
 
-  componentDidMount() {
+  async componentDidMount() {
+    // Current camera Image URL
+    const cameraImageUrl = process.env.REACT_APP_CAMERA_IMAGE_URL;
     // fetch the image from camera to do facial detection
-    fetch('http://localhost:5000/images/output.png', {
+    const response = await fetch(cameraImageUrl, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-    }).then(response => {
-      response.arrayBuffer().then(buffer => {
-        const base64Flag = 'data:image/jpeg;base64,';
-
-        const imageStr = arrayBufferToBase64(buffer);
-        const image = base64Flag + imageStr;
-        this.setState({ image });
-      });
+    });
+    const buffer = await response.arrayBuffer();
+    const base64Flag = 'data:image/jpeg;base64,';
+    const imageStr = await arrayBufferToBase64(buffer);
+    const image = base64Flag + imageStr;
+    await resizeImage(image, result => {
+      this.setState({ resizedImage: result });
+      return result;
     });
   }
 
   capture = () => {
-    const imageSrc = this.state.image;
+    const imageSrc = this.state.resizedImage;
     this.props.webCamCapture(imageSrc);
   };
 
   render() {
     return (
       <>
-        <Image
-          height="200"
-          width="300"
-          src="http://localhost:5000/images/output.png"
-        />
+        <Image height="200" width="300" src={this.state.resizedImage} />
         <Button
           type="submit"
           onClick={this.capture}

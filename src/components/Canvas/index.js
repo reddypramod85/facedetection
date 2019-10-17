@@ -32,7 +32,7 @@ class Canvas extends React.Component {
     return (
       <>
         <canvas
-          width={350}
+          width={300}
           height={200}
           ref={can => {
             this.canvas = can;

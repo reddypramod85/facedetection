@@ -1,4 +1,5 @@
 import dataUriToBuffer from 'data-uri-to-buffer';
+import dataURLtoBlob from 'dataurl-to-blob';
 
 // base URL for Azure Face API
 const baseUrl = 'https://azure-faceapi.cognitiveservices.azure.com/face/v1.0';
@@ -8,6 +9,9 @@ const subscriptionKey = process.env.REACT_APP_SUBSCRIPTION_KEY;
 
 // A person group is a container holding the uploaded person data, including face recognition features
 const personGroupName = process.env.REACT_APP_PERSON_GROUP_NAME;
+
+// Current camera Image URL
+const cameraImageUrl = process.env.REACT_APP_CAMERA_IMAGE_URL;
 
 // adding face detect attributes
 const addImageParams =
@@ -52,14 +56,14 @@ async function getPersonList() {
 // API call to Detect human faces in an image, return face rectangles, and optionally with faceIds,
 // landmarks, and attributes
 async function fetchFaceEntries(imageData) {
-  const buff = await dataUriToBuffer(imageData);
+  const blob = await dataURLtoBlob(imageData);
   const faceDetect = await fetch(detectUri, {
     method: 'POST',
-    body: buff,
     headers: {
       'Content-Type': 'application/octet-stream',
       'Ocp-Apim-Subscription-Key': subscriptionKey,
     },
+    body: blob,
   }).catch(err => {
     console.log('err', err);
   });
@@ -234,6 +238,45 @@ function arrayBufferToBase64(buffer) {
   return window.btoa(binary);
 }
 
+// API call to fetch the current image from the network camera
+async function getCameraImage() {
+  const cameraImage = await fetch(cameraImageUrl, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+  }).then(response => {
+    response.arrayBuffer().then(buffer => {
+      const base64Flag = 'data:image/jpeg;base64,';
+
+      const imageStr = arrayBufferToBase64(buffer);
+      const image = base64Flag + imageStr;
+      return image;
+    });
+  });
+  return cameraImage;
+}
+
+async function resizeImage(image, callback) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 300;
+  // canvas.height = canvas.width * (image.height / image.width);
+  canvas.height = 200;
+  const img = new Image();
+  let data = 'pramod';
+
+  img.onload = await function() {
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    data = canvas.toDataURL('image/jpeg');
+    callback(data);
+  };
+
+  // SEND THIS DATA TO WHEREVER YOU NEED IT
+  img.src = image;
+}
+
 export {
   identifyFaceFromGroup,
   fetchFaceEntries,
@@ -246,4 +289,6 @@ export {
   addImage,
   deletePerson,
   arrayBufferToBase64,
+  getCameraImage,
+  resizeImage,
 };
