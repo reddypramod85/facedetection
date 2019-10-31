@@ -1,34 +1,43 @@
-import React, { Component } from "react";
-import Webcam from "react-webcam";
-import { Button } from "grommet";
-import PropTypes from "prop-types";
+import React, { Component } from 'react';
+import { Button, Image } from 'grommet';
+import PropTypes from 'prop-types';
+import { arrayBufferToBase64, resizeImage } from '../../utill';
 
 export class WebCamCapture extends Component {
-  setRef = webcam => {
-    this.webcam = webcam;
+  state = {
+    resizedImage: null,
   };
 
+  async componentDidMount() {
+    // Current camera Image URL
+    const cameraImageUrl = process.env.REACT_APP_CAMERA_IMAGE_URL;
+    // fetch the image from camera to do facial detection
+    const response = await fetch(cameraImageUrl, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    const buffer = await response.arrayBuffer();
+    const base64Flag = 'data:image/jpeg;base64,';
+    const imageStr = await arrayBufferToBase64(buffer);
+    const image = base64Flag + imageStr;
+    await resizeImage(image, result => {
+      this.setState({ resizedImage: result });
+      return result;
+    });
+  }
+
   capture = () => {
-    const imageSrc = this.webcam.getScreenshot();
+    const imageSrc = this.state.resizedImage;
     this.props.webCamCapture(imageSrc);
   };
 
   render() {
-    const videoConstraints = {
-      width: 1280,
-      height: 720,
-      facingMode: "user"
-    };
     return (
       <>
-        <Webcam
-          audio={false}
-          height={350}
-          ref={this.setRef}
-          screenshotFormat="image/jpeg"
-          width={350}
-          videoConstraints={videoConstraints}
-        />
+        <Image height="400" width="600" src={this.state.resizedImage} />
         <Button
           type="submit"
           onClick={this.capture}
@@ -42,7 +51,7 @@ export class WebCamCapture extends Component {
 
 // proptypes
 WebCamCapture.propTypes = {
-  webCamCapture: PropTypes.func.isRequired
+  webCamCapture: PropTypes.func.isRequired,
 };
 
 export default WebCamCapture;

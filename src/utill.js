@@ -1,4 +1,5 @@
 import dataUriToBuffer from 'data-uri-to-buffer';
+import dataURLtoBlob from 'dataurl-to-blob';
 
 // base URL for Azure Face API
 const baseUrl = 'https://azure-faceapi.cognitiveservices.azure.com/face/v1.0';
@@ -9,19 +10,63 @@ const subscriptionKey = process.env.REACT_APP_SUBSCRIPTION_KEY;
 // A person group is a container holding the uploaded person data, including face recognition features
 const personGroupName = process.env.REACT_APP_PERSON_GROUP_NAME;
 
+// Current camera Image URL
+const cameraImageUrl = process.env.REACT_APP_CAMERA_IMAGE_URL;
+
 // adding face detect attributes
 const addImageParams =
-  'returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile,facialHair,glasses,emotion,hair';
+  'returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile,facialHair,glasses,emotion,hair,makeup,accessories,headPose';
 
 // URI for face Detection
 const detectUri = `${baseUrl}/detect?${addImageParams}`;
 
+// URI to create a person group mentioned in .env file
+const personGroupUri = `${baseUrl}/persongroups/${personGroupName}?`;
+
+// URI to create a new person in a specified person group
+const personUri = `${baseUrl}/persongroups/${personGroupName}/persons`;
+
 // URI for face Identify
-const identifyUril =
-  'https://azure-faceapi.cognitiveservices.azure.com/face/v1.0/identify?';
+const identifyUril = `${baseUrl}/identify?`;
 
 // URI for list of persons in a person group
 const getPersonsUri = `${baseUrl}/persongroups/${personGroupName}/persons?`;
+
+// create a person group
+async function createPersonGroup() {
+  const personGroup = await fetch(personGroupUri, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Ocp-Apim-Subscription-Key': subscriptionKey,
+    },
+    body: JSON.stringify({
+      name: personGroupName,
+    }),
+  }).catch(err => {
+    console.log('err', err);
+  });
+  const pGroup = await personGroup.json();
+  return pGroup;
+}
+
+// create a new person in a specified person group
+async function createPerson(personName) {
+  const person = await fetch(personUri, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Ocp-Apim-Subscription-Key': subscriptionKey,
+    },
+    body: JSON.stringify({
+      name: personName,
+    }),
+  }).catch(err => {
+    console.log('err', err);
+  });
+  const personResponse = await person.json();
+  return personResponse;
+}
 
 // CLear, create and save the person list
 function savePersonList(data) {
@@ -52,14 +97,14 @@ async function getPersonList() {
 // API call to Detect human faces in an image, return face rectangles, and optionally with faceIds,
 // landmarks, and attributes
 async function fetchFaceEntries(imageData) {
-  const buff = await dataUriToBuffer(imageData);
+  const blob = await dataURLtoBlob(imageData);
   const faceDetect = await fetch(detectUri, {
     method: 'POST',
-    body: buff,
     headers: {
       'Content-Type': 'application/octet-stream',
       'Ocp-Apim-Subscription-Key': subscriptionKey,
     },
+    body: blob,
   }).catch(err => {
     console.log('err', err);
   });
@@ -158,6 +203,8 @@ function hair(faceAttributes) {
 function displayData(candidatePersons, personList, faceEntries) {
   let name;
   let confidence;
+  let eyeMakeUp;
+  let lipMakeUp;
   const faceDataArray = [];
   faceEntries.map((faceEntry, index) => {
     if (candidatePersons[index].candidates[0] != null) {
@@ -181,6 +228,10 @@ function displayData(candidatePersons, personList, faceEntries) {
 
     const emotion = emotions(faceAttributes);
     const hairs = hair(faceAttributes);
+    if (faceAttributes.makeup.eyeMakeup) eyeMakeUp = 'Yes';
+    else eyeMakeUp = 'No';
+    if (faceAttributes.makeup.lipMakeup) lipMakeUp = 'Yes';
+    else lipMakeUp = 'No';
 
     faceDataArray.push({
       name,
@@ -191,6 +242,8 @@ function displayData(candidatePersons, personList, faceEntries) {
       emotion,
       hairs,
       glasses,
+      eyeMakeUp,
+      lipMakeUp,
     });
     return null;
   });
@@ -224,7 +277,58 @@ async function deletePerson(personId) {
   });
 }
 
+//  create a base64 encoded ASCII string from a string of binary data
+function arrayBufferToBase64(buffer) {
+  let binary = '';
+  const bytes = [].slice.call(new Uint8Array(buffer));
+
+  bytes.forEach(b => (binary += String.fromCharCode(b)));
+
+  return window.btoa(binary);
+}
+
+// API call to fetch the current image from the network camera
+async function getCameraImage() {
+  const cameraImage = await fetch(cameraImageUrl, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+  }).then(response => {
+    response.arrayBuffer().then(buffer => {
+      const base64Flag = 'data:image/jpeg;base64,';
+
+      const imageStr = arrayBufferToBase64(buffer);
+      const image = base64Flag + imageStr;
+      return image;
+    });
+  });
+  return cameraImage;
+}
+
+async function resizeImage(image, callback) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 600;
+  // canvas.height = canvas.width * (image.height / image.width);
+  canvas.height = 400;
+  const img = new Image();
+  let data = 'pramod';
+
+  img.onload = await function() {
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    data = canvas.toDataURL('image/jpeg');
+    callback(data);
+  };
+
+  // SEND THIS DATA TO WHEREVER YOU NEED IT
+  img.src = image;
+}
+
 export {
+  createPersonGroup,
+  createPerson,
   identifyFaceFromGroup,
   fetchFaceEntries,
   getPersonList,
@@ -235,4 +339,7 @@ export {
   fetchfaceIds,
   addImage,
   deletePerson,
+  arrayBufferToBase64,
+  getCameraImage,
+  resizeImage,
 };

@@ -2,11 +2,14 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 class Canvas extends React.Component {
+  // draw the canvas image with face rectangles
   componentDidMount() {
     const ctx = this.canvas.getContext('2d');
     this.imag.onload = () => {
-      ctx.drawImage(this.imag, 0, 0);
-      ctx.strokeStyle = '#ffbb00';
+      ctx.drawImage(this.imag, 0, 0, this.canvas.width, this.canvas.height);
+      ctx.strokeStyle = '#FF0000';
+      // ctx.strokeRect(60, 20, 100, 100);
+      // ctx.strokeStyle = '#FF0000';
       ctx.lineWidth = 2;
       let count = 0;
       this.props.facer.map(faceRect => {
@@ -29,6 +32,8 @@ class Canvas extends React.Component {
     return (
       <>
         <canvas
+          width={600}
+          height={400}
           ref={can => {
             this.canvas = can;
           }} // width={350} height={200}

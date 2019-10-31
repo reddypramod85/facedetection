@@ -37,6 +37,15 @@ class App extends React.Component {
     event.preventDefault();
     this.setState({ faceRects: [] });
 
+    // API call to create a person group
+    // try {
+    //   const personGroup = await createPersonGroup();
+    //   console.log('personGroup', personGroup);
+    //   // this.setState({ personList });
+    // } catch (error) {
+    //   // this.setState({ error });
+    // }
+
     // API call to get the list of all persons in the current person group
     try {
       const personList = await getPersonList();
@@ -153,7 +162,12 @@ class App extends React.Component {
               </Box>
             )}
             {this.state.personList.length > 0 && (
-              <Box pad="medium" align="center" gap="small">
+              <Box
+                pad="medium"
+                align="center"
+                gap="small"
+                a11yTitle="Person List"
+              >
                 <DisplayPersonList
                   image={this.state.imageData}
                   personList={this.state.personList}
