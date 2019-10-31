@@ -28,7 +28,7 @@ export class DisplayFaceData extends Component {
             primary: true,
           },
           {
-            property: 'hair',
+            property: 'hairs',
             header: <Text>Hair</Text>,
             primary: true,
           },
@@ -45,6 +45,16 @@ export class DisplayFaceData extends Component {
           {
             property: 'smile',
             header: <Text>Smile</Text>,
+            primary: true,
+          },
+          {
+            property: 'eyeMakeUp',
+            header: <Text>MakeUp</Text>,
+            primary: true,
+          },
+          {
+            property: 'lipMakeUp',
+            header: <Text>Lipstick</Text>,
             primary: true,
           },
         ]}

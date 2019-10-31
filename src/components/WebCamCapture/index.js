@@ -37,7 +37,7 @@ export class WebCamCapture extends Component {
   render() {
     return (
       <>
-        <Image height="200" width="300" src={this.state.resizedImage} />
+        <Image height="400" width="600" src={this.state.resizedImage} />
         <Button
           type="submit"
           onClick={this.capture}

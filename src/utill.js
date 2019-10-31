@@ -15,17 +15,58 @@ const cameraImageUrl = process.env.REACT_APP_CAMERA_IMAGE_URL;
 
 // adding face detect attributes
 const addImageParams =
-  'returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile,facialHair,glasses,emotion,hair';
+  'returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile,facialHair,glasses,emotion,hair,makeup,accessories,headPose';
 
 // URI for face Detection
 const detectUri = `${baseUrl}/detect?${addImageParams}`;
 
+// URI to create a person group mentioned in .env file
+const personGroupUri = `${baseUrl}/persongroups/${personGroupName}?`;
+
+// URI to create a new person in a specified person group
+const personUri = `${baseUrl}/persongroups/${personGroupName}/persons`;
+
 // URI for face Identify
-const identifyUril =
-  'https://azure-faceapi.cognitiveservices.azure.com/face/v1.0/identify?';
+const identifyUril = `${baseUrl}/identify?`;
 
 // URI for list of persons in a person group
 const getPersonsUri = `${baseUrl}/persongroups/${personGroupName}/persons?`;
+
+// create a person group
+async function createPersonGroup() {
+  const personGroup = await fetch(personGroupUri, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Ocp-Apim-Subscription-Key': subscriptionKey,
+    },
+    body: JSON.stringify({
+      name: personGroupName,
+    }),
+  }).catch(err => {
+    console.log('err', err);
+  });
+  const pGroup = await personGroup.json();
+  return pGroup;
+}
+
+// create a new person in a specified person group
+async function createPerson(personName) {
+  const person = await fetch(personUri, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Ocp-Apim-Subscription-Key': subscriptionKey,
+    },
+    body: JSON.stringify({
+      name: personName,
+    }),
+  }).catch(err => {
+    console.log('err', err);
+  });
+  const personResponse = await person.json();
+  return personResponse;
+}
 
 // CLear, create and save the person list
 function savePersonList(data) {
@@ -162,6 +203,8 @@ function hair(faceAttributes) {
 function displayData(candidatePersons, personList, faceEntries) {
   let name;
   let confidence;
+  let eyeMakeUp;
+  let lipMakeUp;
   const faceDataArray = [];
   faceEntries.map((faceEntry, index) => {
     if (candidatePersons[index].candidates[0] != null) {
@@ -185,6 +228,10 @@ function displayData(candidatePersons, personList, faceEntries) {
 
     const emotion = emotions(faceAttributes);
     const hairs = hair(faceAttributes);
+    if (faceAttributes.makeup.eyeMakeup) eyeMakeUp = 'Yes';
+    else eyeMakeUp = 'No';
+    if (faceAttributes.makeup.lipMakeup) lipMakeUp = 'Yes';
+    else lipMakeUp = 'No';
 
     faceDataArray.push({
       name,
@@ -195,6 +242,8 @@ function displayData(candidatePersons, personList, faceEntries) {
       emotion,
       hairs,
       glasses,
+      eyeMakeUp,
+      lipMakeUp,
     });
     return null;
   });
@@ -261,9 +310,9 @@ async function getCameraImage() {
 async function resizeImage(image, callback) {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  canvas.width = 300;
+  canvas.width = 600;
   // canvas.height = canvas.width * (image.height / image.width);
-  canvas.height = 200;
+  canvas.height = 400;
   const img = new Image();
   let data = 'pramod';
 
@@ -278,6 +327,8 @@ async function resizeImage(image, callback) {
 }
 
 export {
+  createPersonGroup,
+  createPerson,
   identifyFaceFromGroup,
   fetchFaceEntries,
   getPersonList,
