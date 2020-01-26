@@ -4,9 +4,12 @@ import PropTypes from 'prop-types';
 class Canvas extends React.Component {
   // draw the canvas image with face rectangles
   componentDidMount() {
+    console.log('inside componentDidMount');
     const ctx = this.canvas.getContext('2d');
-    this.imag.onload = () => {
-      ctx.drawImage(this.imag, 0, 0, this.canvas.width, this.canvas.height);
+    // eslint-disable-next-line react/no-string-refs
+    const img = this.refs.image;
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0);
       ctx.strokeStyle = '#FF0000';
       // ctx.strokeRect(60, 20, 100, 100);
       // ctx.strokeStyle = '#FF0000';
@@ -39,9 +42,8 @@ class Canvas extends React.Component {
           }} // width={350} height={200}
         />
         <img
-          ref={img => {
-            this.imag = img;
-          }}
+          // eslint-disable-next-line react/no-string-refs
+          ref="image"
           alt=""
           src={this.props.image}
           style={{ display: 'none' }}

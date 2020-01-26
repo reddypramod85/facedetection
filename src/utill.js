@@ -166,11 +166,17 @@ function faceRects(data) {
 
 // function to get person name from the person ID
 const getNameFromId = (personId, personList) => {
+  console.log('inside get person name', personId, personList);
   let personName;
   personList.map(person => {
-    if (person.personId === personId) personName = personList[0].name;
+    console.log('person  object ', person.personId);
+    if (person.personId === personId) {
+      console.log('person  personId ', personId);
+      personName = personList[0].name;
+    }
     return null;
   });
+  console.log('return  person name', personName);
   return personName;
 };
 
