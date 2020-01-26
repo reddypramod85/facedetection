@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 class Canvas extends React.Component {
   // draw the canvas image with face rectangles
   componentDidMount() {
-    console.log('inside componentDidMount');
     const ctx = this.canvas.getContext('2d');
     // eslint-disable-next-line react/no-string-refs
     const img = this.refs.image;
