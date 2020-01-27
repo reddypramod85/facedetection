@@ -44,6 +44,7 @@ async function createPersonGroup() {
       name: personGroupName,
     }),
   }).catch(err => {
+    // eslint-disable-next-line no-console
     console.log('err', err);
   });
   const pGroup = await personGroup.json();
@@ -62,6 +63,7 @@ async function createPerson(personName) {
       name: personName,
     }),
   }).catch(err => {
+    // eslint-disable-next-line no-console
     console.log('err', err);
   });
   const personResponse = await person.json();
@@ -87,6 +89,7 @@ async function getPersonList() {
       'Ocp-Apim-Subscription-Key': subscriptionKey,
     },
   }).catch(err => {
+    /* eslint no-console: ["error", { allow: ["log"] }] */
     console.log('err', err);
   });
   const pList = await personList.json();
@@ -219,7 +222,7 @@ function displayData(candidatePersons, personList, faceEntries) {
         10,
       );
     } else {
-      name = 'unknown';
+      name = `unknown ${index}`;
       confidence = 'N/A';
     }
     const { faceAttributes } = faceEntry;
@@ -318,6 +321,7 @@ async function resizeImage(image, callback) {
   const img = new Image();
   let data = 'pramod';
 
+  // eslint-disable-next-line func-names
   img.onload = await function() {
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     data = canvas.toDataURL('image/jpeg');
