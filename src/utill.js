@@ -2,7 +2,7 @@ import dataUriToBuffer from 'data-uri-to-buffer';
 import dataURLtoBlob from 'dataurl-to-blob';
 
 // base URL for Azure Face API
-const baseUrl = 'https://azure-faceapi.cognitiveservices.azure.com/face/v1.0';
+const baseUrl = 'http://192.168.1.11:8001/face/v1.0';
 
 // Azure face api subscription key
 const subscriptionKey = process.env.REACT_APP_SUBSCRIPTION_KEY;

@@ -14,7 +14,7 @@ import {
   DisplayFaceData,
   Header,
   WebCamCapture,
-  DisplayPersonList,
+  // DisplayPersonList,
 } from './components';
 
 class App extends React.Component {
@@ -117,7 +117,7 @@ class App extends React.Component {
 
   render() {
     return (
-      <Grommet theme={grommet}>
+      <Grommet theme={grommet} full>
         <Box
           direction="row-responsive"
           justify="center"
@@ -125,6 +125,7 @@ class App extends React.Component {
           pad="small"
           background="dark-2"
           gap="medium"
+          fill="vertical"
         >
           <Form onSubmit={this.handleSubmit}>
             <Header />
@@ -133,7 +134,7 @@ class App extends React.Component {
               direction="row-responsive"
               justify="center"
               align="center"
-              pad="small"
+              pad="large"
               background="dark-2"
               gap="medium"
             >
@@ -161,7 +162,7 @@ class App extends React.Component {
                 <DisplayFaceData showFaceData={this.state.faceData} />
               </Box>
             )}
-            {this.state.personList.length > 0 && (
+            {/* {this.state.personList.length > 0 && (
               <Box
                 pad="medium"
                 align="center"
@@ -173,7 +174,7 @@ class App extends React.Component {
                   personList={this.state.personList}
                 />
               </Box>
-            )}
+            )} */}
           </Form>
         </Box>
       </Grommet>
