@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grommet, Box, Form, Text } from 'grommet';
+import { Grommet, Button, Box, Form, Text } from 'grommet';
 import { grommet } from 'grommet/themes';
 import {
   fetchFaceEntries,
@@ -8,6 +8,9 @@ import {
   displayData,
   fetchfaceIds,
   identifyFaceResponse,
+  createPerson,
+  addImage,
+  trainPersonGroup,
 } from './utill';
 import {
   Canvas,
@@ -15,6 +18,7 @@ import {
   Header,
   WebCamCapture,
   DisplayPersonList,
+  CreatePerson,
 } from './components';
 
 class App extends React.Component {
@@ -26,11 +30,60 @@ class App extends React.Component {
     faceEntries: [],
     candidatePersons: [],
     faceIdsArray: [],
-    error: null,
+    personName: null,
+    message: null,
   };
 
   captureImage = img => {
     this.setState({ imageData: img });
+  };
+
+  updatePersonsList = (personList, name) => {
+    this.setState({ personList });
+    this.setState({ message: 'Successfully deleted a person ' + name });
+  };
+
+  // create a new person in a specified person group
+  captureName = async name => {
+    this.setState({ personName: name });
+    try {
+      const personResponse = await createPerson(name);
+      if (personResponse) {
+        this.setState({
+          message: 'Successfully created a person ' + name,
+        });
+      }
+      await addImage(this.state.imageData, personResponse.personId);
+      await this.trainModel;
+    } catch (error) {
+      this.setState({ message: error });
+    }
+    const personList = await getPersonList();
+    this.setState({ personList });
+  };
+
+  // API call to get the list of all persons in the current person group
+  getPersonList = async () => {
+    try {
+      const personList = await getPersonList();
+      this.setState({ personList });
+    } catch (error) {
+      this.setState({ message: error });
+    }
+  };
+
+  trainModel = async () => {
+    const trainingResponse = await trainPersonGroup();
+    if (trainingResponse.status === 'succeeded') {
+      this.setState({
+        message: 'Training Success',
+      });
+    }
+    if (trainingResponse.status === 'failed') {
+      this.setState({
+        message: 'Training Failed',
+      });
+    }
   };
 
   handleSubmit = async event => {
@@ -51,7 +104,7 @@ class App extends React.Component {
       const personList = await getPersonList();
       this.setState({ personList });
     } catch (error) {
-      this.setState({ error });
+      this.setState({ message: error });
     }
 
     // API call to Detect human faces in an image, return face rectangles, and optionally with faceIds,
@@ -61,7 +114,7 @@ class App extends React.Component {
       const faceEntries = await getFaceEntries.json();
       this.setState({ faceEntries });
     } catch (error) {
-      this.setState({ error });
+      this.setState({ message: error });
     }
 
     // retrieve face ids from the identified faces
@@ -72,7 +125,7 @@ class App extends React.Component {
         return { faceIdsArray };
       });
     } catch (error) {
-      this.setState({ error });
+      this.setState({ message: error });
     }
 
     // Call this after detecting faces, with face IDs,
@@ -84,7 +137,7 @@ class App extends React.Component {
       const candidatePersons = await getIdentifyFaceResponse.json();
       this.setState({ candidatePersons });
     } catch (error) {
-      this.setState({ error });
+      this.setState({ message: error });
     }
 
     // Get the face location rectangle coordinate/size information
@@ -96,7 +149,7 @@ class App extends React.Component {
         return { faceRects: getFaceRects };
       });
     } catch (error) {
-      this.setState({ error });
+      this.setState({ message: error });
     }
 
     // Save and display the face data
@@ -111,7 +164,7 @@ class App extends React.Component {
       });
       // this.setState({ faceData: getDisplatData });
     } catch (error) {
-      this.setState({ error });
+      this.setState({ message: error });
     }
   };
 
@@ -128,7 +181,6 @@ class App extends React.Component {
         >
           <Form onSubmit={this.handleSubmit}>
             <Header />
-            {this.state.error && <Text>Caught an error.</Text>}
             <Box
               direction="row-responsive"
               justify="center"
@@ -161,6 +213,38 @@ class App extends React.Component {
                 <DisplayFaceData showFaceData={this.state.faceData} />
               </Box>
             )}
+            {this.state.message && (
+              <Box
+                direction="row-responsive"
+                justify="center"
+                pad="medium"
+                align="center"
+                gap="small"
+                background="light-4"
+              >
+                <Text
+                  color="status-critical"
+                  Font
+                  weight="bold"
+                  textAlign="center"
+                >
+                  {this.state.message}
+                </Text>
+              </Box>
+            )}
+
+            {this.state.imageData && (
+              <Box
+                direction="row-responsive"
+                justify="center"
+                pad="medium"
+                align="center"
+                gap="small"
+              >
+                <CreatePerson createPerson={this.captureName} />
+                <Button onClick={this.trainModel} primary label="Train Model" />
+              </Box>
+            )}
             {this.state.personList.length > 0 && (
               <Box
                 pad="medium"
@@ -171,6 +255,7 @@ class App extends React.Component {
                 <DisplayPersonList
                   image={this.state.imageData}
                   personList={this.state.personList}
+                  updatePersonsList={this.updatePersonsList}
                 />
               </Box>
             )}

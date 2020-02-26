@@ -2,12 +2,13 @@ import dataUriToBuffer from 'data-uri-to-buffer';
 import dataURLtoBlob from 'dataurl-to-blob';
 
 // base URL for Azure Face API
-const baseUrl = 'https://azure-faceapi.cognitiveservices.azure.com/face/v1.0';
+const baseUrl = process.env.REACT_APP_ENDPOINT;
 
 // Azure face api subscription key
 const subscriptionKey = process.env.REACT_APP_SUBSCRIPTION_KEY;
 
-// A person group is a container holding the uploaded person data, including face recognition features
+// A person group is a container holding the uploaded person data,
+// including face recognition features
 const personGroupName = process.env.REACT_APP_PERSON_GROUP_NAME;
 
 // Current camera Image URL
@@ -15,7 +16,9 @@ const cameraImageUrl = process.env.REACT_APP_CAMERA_IMAGE_URL;
 
 // adding face detect attributes
 const addImageParams =
-  'returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile,facialHair,glasses,emotion,hair,makeup,accessories,headPose';
+  `returnFaceId=true&returnFaceLandmarks=false` +
+  `&returnFaceAttributes=age,gender,smile,facialHair,` +
+  `glasses,emotion,hair,makeup,accessories,headPose`;
 
 // URI for face Detection
 const detectUri = `${baseUrl}/detect?${addImageParams}`;
@@ -61,6 +64,7 @@ async function createPerson(personName) {
     },
     body: JSON.stringify({
       name: personName,
+      userData: 'general user description',
     }),
   }).catch(err => {
     // eslint-disable-next-line no-console
@@ -68,6 +72,56 @@ async function createPerson(personName) {
   });
   const personResponse = await person.json();
   return personResponse;
+}
+
+// API call to add the current face image to a specific person
+async function addImage(imageSrc, personId) {
+  const addImageUrl =
+    `${baseUrl}/persongroups/${personGroupName}` +
+    `/persons/${personId}/persistedFaces?`;
+  const buff = await dataUriToBuffer(imageSrc);
+  const addFace = await fetch(`${addImageUrl}${addImageParams}`, {
+    method: 'POST',
+    body: buff,
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Ocp-Apim-Subscription-Key': subscriptionKey,
+    },
+    credentials: 'same-origin',
+  });
+  const addFaceResponse = await addFace.json();
+  return addFaceResponse;
+}
+
+// Train the person group
+async function trainPersonGroup() {
+  const trainUrl = `${baseUrl}/persongroups/${personGroupName}/train?`;
+  await fetch(trainUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Ocp-Apim-Subscription-Key': subscriptionKey,
+    },
+  });
+  const trainingResponse = await checkTrainingStatus();
+  return trainingResponse;
+}
+
+// Check the status of the face training every 3 seconds
+//   (so as to not overload the 20 request/minute limit)
+// Put a loading spinner icon on the train button while training is continuing
+// Remove the spinner when training is complete
+async function checkTrainingStatus() {
+  const trainingUrl = `${baseUrl}/persongroups/${personGroupName}/training?`;
+  const training = await fetch(trainingUrl, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Ocp-Apim-Subscription-Key': subscriptionKey,
+    },
+  });
+  const trainingResponse = await training.json();
+  return trainingResponse;
 }
 
 // CLear, create and save the person list
@@ -97,8 +151,8 @@ async function getPersonList() {
   return prsnList;
 }
 
-// API call to Detect human faces in an image, return face rectangles, and optionally with faceIds,
-// landmarks, and attributes
+// API call to Detect human faces in an image, return face rectangles,
+// and optionally with faceIds, landmarks, and attributes
 async function fetchFaceEntries(imageData) {
   const blob = await dataURLtoBlob(imageData);
   const faceDetect = await fetch(detectUri, {
@@ -255,31 +309,20 @@ function displayData(candidatePersons, personList, faceEntries) {
   return faceDataArray;
 }
 
-// API call to add the current face image to a specific person
-async function addImage(imageSrc, personId) {
-  const addImageUrl = `${baseUrl}/persongroups/${personGroupName}/persons/${personId}/persistedFaces?`;
-  const buff = await dataUriToBuffer(imageSrc);
-  await fetch(`${addImageUrl}${addImageParams}`, {
-    method: 'POST',
-    body: buff,
-    headers: {
-      'Content-Type': 'application/octet-stream',
-      'Ocp-Apim-Subscription-Key': subscriptionKey,
-    },
-    credentials: 'same-origin',
-  });
-}
-
 // API call to delete a saved person by their person ID
 async function deletePerson(personId) {
-  const deleteImage = `${baseUrl}/persongroups/${personGroupName}/persons/${personId}?`;
-  await fetch(deleteImage, {
+  const deleteImage =
+    `${baseUrl}/persongroups/` + `${personGroupName}/persons/${personId}?`;
+  const deletePerson = await fetch(deleteImage, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
       'Ocp-Apim-Subscription-Key': subscriptionKey,
     },
+  }).then(response => {
+    return response.status;
   });
+  return deletePerson;
 }
 
 //  create a base64 encoded ASCII string from a string of binary data
@@ -335,6 +378,8 @@ async function resizeImage(image, callback) {
 export {
   createPersonGroup,
   createPerson,
+  addImage,
+  trainPersonGroup,
   identifyFaceFromGroup,
   fetchFaceEntries,
   getPersonList,
@@ -343,7 +388,6 @@ export {
   displayData,
   identifyFaceResponse,
   fetchfaceIds,
-  addImage,
   deletePerson,
   arrayBufferToBase64,
   getCameraImage,
